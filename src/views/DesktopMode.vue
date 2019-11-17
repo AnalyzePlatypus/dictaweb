@@ -16,7 +16,22 @@
     <section  v-else-if="connectionState === 'connected' && phoneConnected">
       <h2>Connected</h2>
       <p>Type on your phone to see results</p>
-      {{ scratchMessages }}
+      <form>
+        <div>
+          <label for="question-1" :style="selectedField === 0 ? 'font-weight: bold;' : ''">Question 1</label>
+          <input id="question-1" type="text" v-model="textFields[0]">
+        </div>
+
+         <div>
+          <label for="question-1" :style="selectedField === 1 ? 'font-weight: bold;' : ''">Question 2</label>
+          <input id="question-1" type="text" v-model="textFields[1]">
+        </div>
+
+         <div>
+          <label for="question-1" :style="selectedField === 2 ? 'font-weight: bold;' : ''">Question 3</label>
+          <input id="question-1" type="text" v-model="textFields[2]">
+        </div>
+      </form>
     </section>
 
 
@@ -34,6 +49,7 @@
 
 <script>
 
+import Vue from "vue";
 import getRandomInt from "@/utils/getRandomInt.js";
 
 const MIN_CHANNEL_ID = 111111;
@@ -55,7 +71,14 @@ export default {
       status: STATUS.BOOT,
       channel_id: undefined,
       scratchMessages: [],
-      phoneConnected: false
+      phoneConnected: false,
+      selectedField: 1,
+      maxFields: 2,
+      textFields: [
+        "",
+        "",
+        ""
+      ]
     };
   },
   async mounted() {
@@ -86,6 +109,18 @@ export default {
         eventName: "client-message",
         callback: this.handleMessage
       });
+
+       this.$store.dispatch("pusher/bind", {
+        channel_id: this.fullChannelId,
+        eventName: "client-next-field",
+        callback: this.handleNextField
+      });
+
+       this.$store.dispatch("pusher/bind", {
+        channel_id: this.fullChannelId,
+        eventName: "client-previous-field",
+        callback: this.handlePreviousField
+      });
     }
   },
   methods: {
@@ -96,7 +131,16 @@ export default {
       this.phoneConnected = false;
     },
     handleMessage(message) {
+      Vue.set(this.textFields, this.selectedField, message)
       this.scratchMessages.push(message)
+    },
+    handleNextField() {
+      this.selectedField += 1;
+      if(this.selectedField > this.maxFields) this.selectedField = 0;
+    },
+    handlePreviousField() {
+      this.selectedField -= 1;
+      if(this.selectedField < 0) this.selectedField = this.maxFields;
     }
   },
   computed: {

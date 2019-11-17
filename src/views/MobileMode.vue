@@ -15,18 +15,20 @@
 
     <section  v-else-if="connectionState == 'connected'">
       <h2>Connected</h2>
-      <p>Let's get started</p>
+      <p>Type to send text to your desktop</p>
 
       <section> 
         <input type="text" v-model="message">
         <button @click="send">Send</button>
       </section>
+
+      <section>
+        <button @click="previous">‹ Previous</button>
+        <button @click="next">Next ›</button>
+      </section>
     </section>
 
-    {{ scratchMessages }}
-    {{ deviceDetails.report }}
-
-
+    
     <div v-if="!channel_id">
       Ready to connect
     </div>
@@ -34,6 +36,16 @@
     <div v-else>
       {{connectionState}} to {{channel_id}}
     </div>
+
+    <section>
+      <div v-if="connectionState === 'connected'">✅ Server Connected</div>
+      <div v-else>❌ Server Disconnected</div>
+    </section>
+
+    <!-- <section>
+      <div v-if="desktopConnected">✅ Desktop Connected</div>
+      <div v-else>❌ Desktop Disconnected</div>
+    </section> -->
   </div>
 </template>
 
@@ -56,7 +68,8 @@ export default {
       channel_id: undefined,
       scratchMessages: {},
       message: "",
-      deviceDetails: ""
+      deviceDetails: "",
+      desktopConnected: false
     };
   },
   mounted() {
@@ -75,17 +88,46 @@ export default {
           console.error(e);
         }
       });
+
+     this.$store.dispatch("pusher/bind", {
+        channel_id: this.fullChannelId,
+        eventName: "pusher:member_added",
+        callback: this.handleMemberAdded
+      });
+
       this.$store.dispatch("pusher/bind", {
         channel_id: this.fullChannelId,
-        eventName: "message",
-        callback: this.handleMessage
+        eventName: "pusher:member_removed",
+        callback: this.handleMemberRemoved
       });
+
     },
+    handleMemberAdded() {
+      this.desktopConnected = true;
+    },
+    handleMemberRemoved() {
+      this.dsktopConnected = false;
+    },
+
     send() {
        this.$store.dispatch("pusher/trigger", {
           channel_id: this.fullChannelId,
           eventName: "client-message",
           data: this.message
+       });
+    },
+    previous() {
+      this.$store.dispatch("pusher/trigger", {
+        channel_id: this.fullChannelId,
+        eventName: "client-previous-field",
+        data: {}
+       });
+    },
+    next() {
+      this.$store.dispatch("pusher/trigger", {
+        channel_id: this.fullChannelId,
+        eventName: "client-next-field",
+        data: {}
        });
     }
   },
