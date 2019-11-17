@@ -13,23 +13,24 @@
       <p>Open <code>dictaweb.io</code> on your phone</p>
     </section>
 
-    <section  v-else-if="connectionState === 'connected' && phoneConnected">
-      <h2>Connected</h2>
-      <p>Type on your phone to see results</p>
-      <form>
-        <div>
-          <label for="question-1" :style="selectedField === 0 ? 'font-weight: bold;' : ''">Question 1</label>
+    <section  v-else-if="connectionState === 'connected'">
+      <form class="margin: 0 auto;">
+        <div v-if="phoneConnected">
+        <p>Type on your phone to see results</p>
+      </div>
+        <div class="form-group"  :class="selectedField === 0 ? 'selected-field' : ''">
+          <label for="question-1">Name</label>
           <input id="question-1" type="text" v-model="textFields[0]">
         </div>
 
-         <div>
-          <label for="question-1" :style="selectedField === 1 ? 'font-weight: bold;' : ''">Question 2</label>
-          <input id="question-1" type="text" v-model="textFields[1]">
+         <div class="form-group" :class="selectedField === 1 ? 'selected-field' : ''">
+          <label for="question-1">Description</label>
+          <textarea id="question-1" type="text" v-model="textFields[1]" rows="2"></textarea>
         </div>
 
-         <div>
-          <label for="question-1" :style="selectedField === 2 ? 'font-weight: bold;' : ''">Question 3</label>
-          <input id="question-1" type="text" v-model="textFields[2]">
+         <div class="form-group" :class="selectedField === 2 ? 'selected-field' : ''">
+          <label for="question-1">Impressions</label>
+          <textarea id="question-1" type="text" v-model="textFields[2]" rows="5"></textarea>
         </div>
       </form>
     </section>
@@ -55,24 +56,16 @@ import getRandomInt from "@/utils/getRandomInt.js";
 const MIN_CHANNEL_ID = 111111;
 const MAX_CHANNEL_ID = 999999;
 
-const STATUS = {
-  BOOT: "BOOT",
-  SETUP: "SETUP",
-  WAITING_FOR_MIC_CONNECTION: "WAITING_FOR_MIC_CONNECTION",
-  MIC_CONNECTED: "MIC_CONNECTED",
-  MIC_DISCONNECTED: "MIC_DISCONNECTED",
-}
+
 
 export default {
   name: 'DesktopMode',
   data() {
     return {
-      STATUS,
-      status: STATUS.BOOT,
       channel_id: undefined,
       scratchMessages: [],
       phoneConnected: false,
-      selectedField: 1,
+      selectedField: 0,
       maxFields: 2,
       textFields: [
         "",
@@ -82,7 +75,6 @@ export default {
     };
   },
   async mounted() {
-    if(this.status = STATUS.BOOT) {
       await this.$store.dispatch("pusher/init", "desktop");
       this.channel_id = getRandomInt(MIN_CHANNEL_ID, MAX_CHANNEL_ID);
       this.$store.dispatch("pusher/subscribe", {
@@ -121,7 +113,6 @@ export default {
         eventName: "client-previous-field",
         callback: this.handlePreviousField
       });
-    }
   },
   methods: {
     handleMemberAdded() {
@@ -150,10 +141,43 @@ export default {
     connectionState() {
       return this.$store.getters['pusher/connectionState'];
     }
+  },
+  watch: {
+    selectedField(oldField, newField) {
+       this.$store.dispatch("pusher/trigger", {
+        channel_id: this.fullChannelId,
+        eventName: "client-field-changed",
+        data: {}
+       });
+    }
   }
 };
 </script>
 
 <!-- Add 'scoped' attribute to limit CSS to this component only -->
 <style lang='scss'>
+
+label {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: rgb(27, 27, 27);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 500px;
+  margin-top: 28px;
+}
+
+.selected-field {
+  label {
+    color: blue;
+  }
+
+  input, textarea {
+    border-color: blue;
+  }
+}
 </style>

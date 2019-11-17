@@ -13,18 +13,20 @@
       <h2>Connecting...</h2>
     </section>
 
-    <section  v-else-if="connectionState == 'connected'">
-      <h2>Connected</h2>
+    <section  v-else-if="connectionState == 'connected'" class="mobile-mode-container">
       <p>Type to send text to your desktop</p>
 
-      <section> 
-        <input type="text" v-model="message">
-        <button @click="send">Send</button>
+      <section>
+        <h4 v-if="showSentBanner" class="sent-banner"><bold>Sent!</bold></h4>
+
+        <textarea class="mobile-textarea" rows="4" placeholder="Start typing..." v-model="message" @change="send" ></textarea>
+
+        <button @click="send" class="button-primary button-wide">Send</button>
       </section>
 
-      <section>
-        <button @click="previous">‹ Previous</button>
-        <button @click="next">Next ›</button>
+      <section class="flex-horiz">
+        <button @click="previous" class="button-wide ">‹ Previous</button>
+        <button @click="next" class="button-wide ">Next ›</button>
       </section>
     </section>
 
@@ -33,9 +35,9 @@
       Ready to connect
     </div>
 
-    <div v-else>
+    <!-- <div v-else>
       {{connectionState}} to {{channel_id}}
-    </div>
+    </div> -->
 
     <section>
       <div v-if="connectionState === 'connected'">✅ Server Connected</div>
@@ -69,7 +71,8 @@ export default {
       scratchMessages: {},
       message: "",
       deviceDetails: "",
-      desktopConnected: false
+      desktopConnected: false,
+      showSentBanner: false
     };
   },
   mounted() {
@@ -101,12 +104,21 @@ export default {
         callback: this.handleMemberRemoved
       });
 
+      this.$store.dispatch("pusher/bind", {
+        channel_id: this.fullChannelId,
+        eventName: "client-field-changed",
+        callback: this.handleFieldChanged
+      });
+
     },
     handleMemberAdded() {
       this.desktopConnected = true;
     },
     handleMemberRemoved() {
-      this.dsktopConnected = false;
+      this.desktopConnected = false;
+    },
+    handleFieldChanged(event) {
+
     },
 
     send() {
@@ -115,6 +127,11 @@ export default {
           eventName: "client-message",
           data: this.message
        });
+       this.message = "";
+       this.showSentBanner = true;
+       setTimeout(()=>{
+         this.showSentBanner = false
+       }, 1000)
     },
     previous() {
       this.$store.dispatch("pusher/trigger", {
@@ -128,7 +145,7 @@ export default {
         channel_id: this.fullChannelId,
         eventName: "client-next-field",
         data: {}
-       });
+      });
     }
   },
   computed: {
@@ -144,4 +161,47 @@ export default {
 
 <!-- Add 'scoped' attribute to limit CSS to this component only -->
 <style lang='scss'>
+
+.mobile-mode-container {
+  margin: 4px;
+}
+
+input {
+   border: 2px solid lightgray;
+  border-radius: 4px;
+  width: 100%;
+  font-size: 1.2rem;
+}
+
+textarea {
+  border: 2px solid lightgray;
+  border-radius: 4px;
+  width: 100%;
+  font-size: 1.2rem;
+}
+
+button {
+  font-size: 1.2rem;
+  margin: 2px;
+  border-radius: 4px;
+  padding: 4px 12px;
+}
+
+.button-wide {
+  padding: 4px 22px;
+  width: 100%;
+}
+
+.button-primary {
+  background: rgb(50, 50, 246);
+  color: white;
+}
+
+.sent-banner {
+  color: green;
+  background: rgba(0, 128, 0, 0.239);
+  padding: 6px 6px 3px 6px;
+  margin: 0px;
+  margin-bottom: 8px;
+}
 </style>
