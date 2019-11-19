@@ -63,7 +63,7 @@ const STATUS = {
 import Vue from 'vue';
 import AppleDetectBrowser from "@/utils/AppleDetectBrowser.js";
 import fields from "@/utils/fields.js";
-import {nextNumberWithWrapping, previousNumberWithWrapping} from "@/utils/nextNumberwithWrapping.js";
+import {nextNumberWithWrapping, previousNumberWithWrapping} from "@/utils/nextNumberWithWrapping.js";
 
 const CHANNEL_ID_LENGTH = 6;
 

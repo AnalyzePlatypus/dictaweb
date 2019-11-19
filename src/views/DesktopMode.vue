@@ -81,7 +81,7 @@
 import Vue from "vue";
 import getRandomInt from "@/utils/getRandomInt.js";
 import fields from "@/utils/fields.js";
-import {nextNumberWithWrapping, previousNumberWithWrapping} from "@/utils/nextNumberwithWrapping.js";
+import {nextNumberWithWrapping, previousNumberWithWrapping} from "@/utils/nextNumberWithWrapping.js";
 
 const MIN_CHANNEL_ID = 111111;
 const MAX_CHANNEL_ID = 999999;
