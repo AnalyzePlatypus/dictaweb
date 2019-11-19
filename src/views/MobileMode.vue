@@ -1,13 +1,20 @@
 <template>
-  <div>
-     <h1>Dictaphone</h1>
+  <div class="flex-vert align-center">
+     <h1 class="text-center"  style="padding: 32px 0px 24px 0px; ">Dictaphone</h1>
 
-    <section v-if="connectionState == 'not_initialized'">
+
+    <section class="card" style="max-width: 300px;" v-if="connectionState == 'not_initialized'">
       <form @submit="connect">
         <h2>Enter Connection Code</h2>
-        <input type="text" v-model="channel_id">
-        <button class="button primary" @click="connect" :disabled="!channelIdReadyToSubmit">Connect</button>
-        <p>Open <code>dictaweb.netlify.com</code> on your desktop</p>
+        <div class="flex-vert align-center">
+          <input 
+            type="tel" 
+            autocomplete="off" 
+            class="text-input-narrow" 
+            @input="connect"
+            v-model="channel_id">
+        </div>
+        <p class="text-center">Open <code>dictaweb.netlify.com</code> on your desktop</p>
       </form>
     </section>
 
@@ -15,7 +22,7 @@
       <h2>Connecting...</h2>
     </section>
 
-    <section  v-else-if="connectionState == 'connected'" class="mobile-mode-container">
+    <section v-else-if="connectionState == 'connected'" class="mobile-mode-container card">
       
       <h2 style="text-align:left;">{{fields[selectedFieldId].label}}</h2>
 
@@ -32,18 +39,16 @@
     </section>
 
     
-    <div v-if="!channel_id">
-      Ready to connect
-    </div>
+   
 
     <!-- <div v-else>
       {{connectionState}} to {{channel_id}}
     </div> -->
 
-    <section>
+    <!-- <section>
       <div v-if="connectionState === 'connected'">✅ Desktop Connected</div>
       <div v-else>❌ Server Disconnected</div>
-    </section>
+    </section> -->
 
     <!-- <section>
       <div v-if="desktopConnected">✅ Desktop Connected</div>
@@ -89,7 +94,7 @@ export default {
   },
   methods: {
     async connect() {
-      if(!this.fullChannelId || this.fullChannelId.length < CHANNEL_ID_LENGTH) return;
+      if(!this.channelIdReadyToSubmit) return;
 
       await this.$store.dispatch("pusher/init", 'mic');
       this.$store.dispatch("pusher/subscribe", {
@@ -190,23 +195,7 @@ export default {
 <!-- Add 'scoped' attribute to limit CSS to this component only -->
 <style lang='scss'>
 
-.mobile-mode-container {
-  margin: 16px;
-}
-
-input {
-   border: 2px solid lightgray;
-  border-radius: 4px;
-  width: 100%;
-  font-size: 1.2rem;
-}
-
-textarea {
-  border: 2px solid lightgray;
-  border-radius: 4px;
-  width: 100%;
-  font-size: 1.2rem;
-}
+$flash-success-timing: cubic-bezier(0.075, 0.82, 0.165, 1);
 
 
 .button-wide {
@@ -231,5 +220,28 @@ textarea {
   padding: 6px 6px 3px 6px;
   margin: 0px;
   margin-bottom: 8px;
+}
+
+.text-input-narrow {
+  font-size: 2.2rem;
+  // width: 150px;
+  text-align: center;
+}
+
+.card {
+  background: white;
+  height: fit-content;
+  
+  width: 95%;
+  margin: 4px 16px;
+  
+  padding: 16px;
+  border-radius: 4px;
+  box-shadow: 0px 4px 12px rgba(37, 37, 117, 0.322);
+  transition: all 1s $flash-success-timing;
+}
+
+.text-center {
+  text-align: center;
 }
 </style>

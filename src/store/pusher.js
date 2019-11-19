@@ -26,9 +26,9 @@ export const mutations = {
 
 export const actions = {
   init({state, dispatch}, role) {
-    Pusher.log = function (message) {
-      if (window.console && window.console.log) { window.console.log(message); }
-    };
+    // Pusher.log = function (message) {
+    //   if (window.console && window.console.log) { window.console.log(message); }
+    // };
 
     state.pusherInstance = new Pusher(state.key, { 
       cluster: state.cluster,
@@ -66,7 +66,7 @@ export const actions = {
   },
 
   bind({state}, {eventName, channel_id, callback}) {
-    console.log(`bind: ${channel_id}:${eventName}`);
+    // console.log(`bind: ${channel_id}:${eventName}`);
     if(!state.pusherInstance || !state.pusherInstance.channel(channel_id)) {
       state.queuedActions.push({ action: 'bind', payload: {eventName, channel_id, callback} });
       console.log("Pusher not initialized. Queuing.");

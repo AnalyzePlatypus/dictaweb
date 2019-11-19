@@ -1,35 +1,19 @@
 <template>
   <div class="full-height">
     
-
-    <section v-if="!connectionState === 'connected'">
-      <h2>Connecting...</h2>
-    </section>
-
-
-    <section v-else-if="connectionState === 'connected' && !phoneConnected">
-      <h3>Connection code</h3>
-      <h2>{{channel_id}}</h2>
-      <p>Open <code>dictaweb.netlify.com</code> on your phone</p>
-    </section>
-
     <main class="main-container">
-      <section  v-if="connectionState === 'connected'">
+      <section>
         <form class="form" @submit.prevent>
           <div>
             <div class="form-header">
               <h1 class="form-title">Case Form</h1>
-              <div v-if="phoneConnected">
-                <p>Type on your phone to see results</p>
-              </div>
             </div>
 
             <div 
               v-for="(field, idx) of fields"
               :key="idx"
               class="form-group"  
-              :class="[selectedFieldId === idx ? 'selected-field' : '', flashFieldIds.includes(idx) ? 'flash-success' : '']"
-              @click="changeFocus(idx)">
+              :class="[selectedFieldId === idx ? 'selected-field' : '', flashFieldIds.includes(idx) ? 'flash-success' : '']">
               <label :for="'field' + idx">{{field.label}}</label>
 
               <input
@@ -37,6 +21,7 @@
                 :id="'field' + idx" 
                 :type="field.type" 
                 v-model="model[idx]"
+                @focus="changeFocus(idx)"
                 @change="fieldTextEdited(idx)">
 
               <textarea
@@ -45,6 +30,7 @@
                 :type="field.type"
                 :rows="field.rows" 
                 v-model="model[idx]"
+                @focus="changeFocus(idx)"
                 @change="fieldTextEdited(idx)">
               </textarea>
             </div>
@@ -52,25 +38,47 @@
 
           
           <div class="button-bar flex-horiz justify-between">
-            <button class="button">Clear form</button>
+            <button 
+              class="button" 
+              :disabled="formIsEmpty"
+              :class="clearButtonArmed ? 'danger' : ''" 
+              @click="handleClearClicked"
+              @blur="this.clearButtonArmed = false">
+              {{clearButtonArmed ? "Clear form" : "Clear form" }}
+            </button>
 
             <button class="button success">Generate PDF</button>
           </div>
         </form>
       </section>
 
-      <aside class="status-card">
-        <section>
-          <div v-if="connectionState === 'connected'">✅ Server Connected</div>
-          <div v-else>❌ Server Disconnected</div>
+      <aside class="status-card" :class="phoneConnected ? 'connected' : ''">
+        <h2>Dictation</h2>
+        
+        <section v-if="!connectionState === 'connected'">
+          <h2>Connecting...</h2>
+        </section>
+
+
+        <section v-else-if="connectionState === 'connected' && !phoneConnected">
+          <p>Visit <code>dictaweb.netlify.com</code> on your phone and enter code:</p>
+          <p class="connection-code">{{channel_id.toString().substring(0,3)}} {{channel_id.toString().substring(3,6)}}</p>
+        </section>
+
+        <section v-else-if="phoneConnected">
+          ✅ Phone connected
+        </section>
+        <!-- <section>
+          <div v-if="connectionState === 'connected'">✅ Server</div>
+          <div v-else>❌ Server</div>
         </section>
 
         <section>
-          <div v-if="phoneConnected">✅ Phone Connected</div>
-          <div v-else>❌ Phone Disconnected</div>
+          <div v-if="phoneConnected">✅ Phone</div>
+          <div v-else>❌ Phone</div>
         </section>
 
-        <router-link :to="{name: 'mobile'}">Change to Remote mode ›</router-link>
+        <router-link :to="{name: 'mobile'}">Change to Remote mode ›</router-link> -->
       </aside>
     </main>
   </div>
@@ -86,7 +94,10 @@ import {nextNumberWithWrapping, previousNumberWithWrapping} from "@/utils/nextNu
 const MIN_CHANNEL_ID = 111111;
 const MAX_CHANNEL_ID = 999999;
 
-
+function objectIsEmpty(obj) {
+  // https://stackoverflow.com/a/32108184/6068782
+  return Object.keys(obj).length === 0 && obj.constructor === Object;
+}
 
 export default {
   name: 'DesktopMode',
@@ -98,7 +109,8 @@ export default {
       selectedFieldId: 0,
       fields,
       model: {},
-      flashFieldIds: [] 
+      flashFieldIds: [],
+      clearButtonArmed: false
     };
   },
   async mounted() {
@@ -181,7 +193,15 @@ export default {
           fieldId: fieldId
         }
        });
-    } 
+    },
+    handleClearClicked() {
+      if(this.formIsEmpty) return;
+      this.clearButtonArmed ? this.clearForm() : this.clearButtonArmed = true;
+    },
+    clearForm() {
+      this.model = {};
+      this.clearButtonArmed = false;
+    }
   },
   computed: {
     fullChannelId() {
@@ -189,6 +209,9 @@ export default {
     },
     connectionState() {
       return this.$store.getters['pusher/connectionState'];
+    },
+    formIsEmpty() {
+      return objectIsEmpty(this.model);
     }
   },
   watch: {
@@ -208,7 +231,7 @@ export default {
 <!-- Add 'scoped' attribute to limit CSS to this component only -->
 <style lang='scss'>
 
-$color-primary: rgb(75, 75, 250);
+$color-primary: hsl(240,94,63);
 $color-primary__hover: rgb(62, 62, 255);
 
 $color-success: rgb(88, 199, 93);
@@ -216,6 +239,9 @@ $color-success__hover: rgb(88, 199, 103);
 
 $flash-success-duration: 4s;
 $flash-success-timing: cubic-bezier(0.075, 0.82, 0.165, 1);
+
+$text-color: hsl(240, 74, 23);
+$form-border-color: hsl(240, 24, 83);
 
 .full-height {
   height: 100%;;
@@ -230,11 +256,18 @@ $flash-success-timing: cubic-bezier(0.075, 0.82, 0.165, 1);
 .status-card {
   background: white;
   height: fit-content;
-  min-width: 200px;
+  min-width: 150px;
+  max-width: 250px;
   margin: 20% 100px;
+  
   padding: 16px;
   border-radius: 4px;
   box-shadow: 0px 4px 12px rgba(37, 37, 117, 0.322);
+  transition: all 1s $flash-success-timing;
+
+  &.connected {
+    margin: 46% 0px 0% 100px;
+  }
 }
 
 .form {
@@ -256,17 +289,33 @@ $flash-success-timing: cubic-bezier(0.075, 0.82, 0.165, 1);
 h1 {
   font-size: 2rem;
   margin: 0px;
-  padding-top: 32px;
+  padding: 24px 0px 16px 0px;
+  color: $text-color;
 }
 
 label {
   font-size: 1rem;
   font-weight: bold;
-  color: rgb(27, 27, 27);
+  color: $text-color;
   text-transform: uppercase;
   letter-spacing: 0.3px;
   margin: 0px 0px 1px 2px;
 }
+
+input {
+  border: 2px solid $form-border-color;
+  border-radius: 4px;
+  width: 100%;
+  font-size: 1.2rem;
+}
+
+textarea {
+  border: 2px solid $form-border-color;
+  border-radius: 4px;
+  width: 100%;
+  font-size: 1.2rem;
+}
+
 
 .form-group {
   display: flex;
@@ -274,7 +323,6 @@ label {
   align-items: flex-start;
   padding: 20px 16px 8px 16px;
   width: 100%;
-
 }
 
 .form-group:nth-of-type(2) {
@@ -334,6 +382,12 @@ label {
   100% {
     
   }
+}
+
+.connection-code {
+  font-size: 3rem;
+  font-weight: 400;
+  margin: 0px;
 }
 
 </style>
