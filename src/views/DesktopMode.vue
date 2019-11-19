@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <h1>Desktop Mode</h1>
+  <div class="full-height">
+    
 
     <section v-if="!connectionState === 'connected'">
       <h2>Connecting...</h2>
@@ -10,41 +10,69 @@
     <section v-else-if="connectionState === 'connected' && !phoneConnected">
       <h3>Connection code</h3>
       <h2>{{channel_id}}</h2>
-      <p>Open <code>dictaweb.io</code> on your phone</p>
+      <p>Open <code>dictaweb.netlify.com</code> on your phone</p>
     </section>
 
-    <section  v-else-if="connectionState === 'connected'">
-      <form class="margin: 0 auto;">
-        <div v-if="phoneConnected">
-        <p>Type on your phone to see results</p>
-      </div>
-        <div class="form-group"  :class="selectedField === 0 ? 'selected-field' : ''">
-          <label for="question-1">Name</label>
-          <input id="question-1" type="text" v-model="textFields[0]">
-        </div>
+    <main class="main-container">
+      <section  v-if="connectionState === 'connected'">
+        <form class="form" @submit.prevent>
+          <div>
+            <div class="form-header">
+              <h1 class="form-title">Case Form</h1>
+              <div v-if="phoneConnected">
+                <p>Type on your phone to see results</p>
+              </div>
+            </div>
 
-         <div class="form-group" :class="selectedField === 1 ? 'selected-field' : ''">
-          <label for="question-1">Description</label>
-          <textarea id="question-1" type="text" v-model="textFields[1]" rows="2"></textarea>
-        </div>
+            <div 
+              v-for="(field, idx) of fields"
+              :key="idx"
+              class="form-group"  
+              :class="[selectedFieldId === idx ? 'selected-field' : '', flashFieldIds.includes(idx) ? 'flash-success' : '']"
+              @click="changeFocus(idx)">
+              <label :for="'field' + idx">{{field.label}}</label>
 
-         <div class="form-group" :class="selectedField === 2 ? 'selected-field' : ''">
-          <label for="question-1">Impressions</label>
-          <textarea id="question-1" type="text" v-model="textFields[2]" rows="5"></textarea>
-        </div>
-      </form>
-    </section>
+              <input
+                v-if="field.rows === 1"
+                :id="'field' + idx" 
+                :type="field.type" 
+                v-model="model[idx]"
+                @change="fieldTextEdited(idx)">
 
+              <textarea
+                v-else
+                :id="'field' + idx" 
+                :type="field.type"
+                :rows="field.rows" 
+                v-model="model[idx]"
+                @change="fieldTextEdited(idx)">
+              </textarea>
+            </div>
+          </div>
 
-     <section>
-      <div v-if="connectionState === 'connected'">✅ Server Connected</div>
-      <div v-else>❌ Server Disconnected</div>
-    </section>
+          
+          <div class="button-bar flex-horiz justify-between">
+            <button class="button">Clear form</button>
 
-    <section>
-      <div v-if="phoneConnected">✅ Phone Connected</div>
-      <div v-else>❌ Phone Disconnected</div>
-    </section>
+            <button class="button success">Generate PDF</button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="status-card">
+        <section>
+          <div v-if="connectionState === 'connected'">✅ Server Connected</div>
+          <div v-else>❌ Server Disconnected</div>
+        </section>
+
+        <section>
+          <div v-if="phoneConnected">✅ Phone Connected</div>
+          <div v-else>❌ Phone Disconnected</div>
+        </section>
+
+        <router-link :to="{name: 'mobile'}">Change to Remote mode ›</router-link>
+      </aside>
+    </main>
   </div>
 </template>
 
@@ -52,6 +80,8 @@
 
 import Vue from "vue";
 import getRandomInt from "@/utils/getRandomInt.js";
+import fields from "@/utils/fields.js";
+import {nextNumberWithWrapping, previousNumberWithWrapping} from "@/utils/nextNumberwithWrapping.js";
 
 const MIN_CHANNEL_ID = 111111;
 const MAX_CHANNEL_ID = 999999;
@@ -65,13 +95,10 @@ export default {
       channel_id: undefined,
       scratchMessages: [],
       phoneConnected: false,
-      selectedField: 0,
-      maxFields: 2,
-      textFields: [
-        "",
-        "",
-        ""
-      ]
+      selectedFieldId: 0,
+      fields,
+      model: {},
+      flashFieldIds: [] 
     };
   },
   async mounted() {
@@ -98,7 +125,7 @@ export default {
 
       this.$store.dispatch("pusher/bind", {
         channel_id: this.fullChannelId,
-        eventName: "client-message",
+        eventName: "client-field-text-edited",
         callback: this.handleMessage
       });
 
@@ -121,18 +148,40 @@ export default {
     handleMemberRemoved() {
       this.phoneConnected = false;
     },
-    handleMessage(message) {
-      Vue.set(this.textFields, this.selectedField, message)
-      this.scratchMessages.push(message)
+    handleMessage(event) {      
+      Vue.set(this.model, event.fieldId, event.text);
+      this.flashFieldIds = this.flashFieldIds.filter(id => id != event.fieldId);
+      this.flashFieldIds.push(event.fieldId);
+      setTimeout(()=>{
+        this.flashFieldIds = this.flashFieldIds.filter(id => id != event.fieldId);
+      }, 1000)
     },
     handleNextField() {
-      this.selectedField += 1;
-      if(this.selectedField > this.maxFields) this.selectedField = 0;
+      this.selectedFieldId = nextNumberWithWrapping(this.selectedFieldId, this.fields.length - 1)
     },
     handlePreviousField() {
-      this.selectedField -= 1;
-      if(this.selectedField < 0) this.selectedField = this.maxFields;
-    }
+      this.selectedFieldId = previousNumberWithWrapping(this.selectedFieldId, this.fields.length - 1)
+    },
+    changeFocus(fieldId) {
+      this.selectedFieldId = fieldId;
+      this.$store.dispatch("pusher/trigger", {
+        channel_id: this.fullChannelId,
+        eventName: "client-select-field",
+        data: {
+          fieldId: this.selectedFieldId
+        }
+       });
+    },
+    fieldTextEdited(fieldId) {
+      this.$store.dispatch("pusher/trigger", {
+        channel_id: this.fullChannelId,
+        eventName: "client-field-text-edited",
+        data: {
+          text: this.model[fieldId],
+          fieldId: fieldId
+        }
+       });
+    } 
   },
   computed: {
     fullChannelId() {
@@ -143,11 +192,13 @@ export default {
     }
   },
   watch: {
-    selectedField(oldField, newField) {
+    selectedFieldId(oldField, newField) {
        this.$store.dispatch("pusher/trigger", {
         channel_id: this.fullChannelId,
         eventName: "client-field-changed",
-        data: {}
+        data: {
+          fieldId: this.selectedFieldId
+        }
        });
     }
   }
@@ -157,27 +208,132 @@ export default {
 <!-- Add 'scoped' attribute to limit CSS to this component only -->
 <style lang='scss'>
 
+$color-primary: rgb(75, 75, 250);
+$color-primary__hover: rgb(62, 62, 255);
+
+$color-success: rgb(88, 199, 93);
+$color-success__hover: rgb(88, 199, 103);
+
+$flash-success-duration: 4s;
+$flash-success-timing: cubic-bezier(0.075, 0.82, 0.165, 1);
+
+.full-height {
+  height: 100%;;
+}
+
+.main-container {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+
+.status-card {
+  background: white;
+  height: fit-content;
+  min-width: 200px;
+  margin: 20% 100px;
+  padding: 16px;
+  border-radius: 4px;
+  box-shadow: 0px 4px 12px rgba(37, 37, 117, 0.322);
+}
+
+.form {
+  min-width: 500px;
+  background: white;
+  padding-bottom: 16px;
+  margin-left: 15%;
+  height: 100%;
+  box-shadow: 0px 4px 12px rgba(37, 37, 117, 0.322);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.form-header {
+  margin: 0px 16px;
+}
+
+h1 {
+  font-size: 2rem;
+  margin: 0px;
+  padding-top: 32px;
+}
+
 label {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: bold;
   color: rgb(27, 27, 27);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin: 0px 0px 1px 2px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  max-width: 500px;
-  margin-top: 28px;
+  padding: 20px 16px 8px 16px;
+  width: 100%;
+
 }
+
+.form-group:nth-of-type(2) {
+  padding-top: 0px;
+}
+
 
 .selected-field {
   label {
-    color: blue;
+    color: $color-primary;
   }
 
   input, textarea {
-    border-color: blue;
+    border-color: $color-primary;
   }
 }
+
+.button-bar {
+  margin:  4px 16px 4px 16px;
+}
+
+.flash-success {
+  animation: flash-success__background $flash-success-duration $flash-success-timing;
+  
+  label {
+    animation: flash-success__label $flash-success-duration $flash-success-timing;
+  }
+
+  input, textarea {
+    animation: flash-success__inputs $flash-success-duration $flash-success-timing;
+  }
+}
+
+@keyframes flash-success__background {
+  0% {
+    background: lighten($color-success, 30%);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes flash-success__inputs {
+  0% {
+   border-color: $color-success;
+   background: lighten($color-success, 20%);
+  }
+  100% {
+    
+  }
+}
+
+@keyframes flash-success__label {
+  0% {
+    color: darken($color-success, 10%);
+  }
+  100% {
+    
+  }
+}
+
 </style>
