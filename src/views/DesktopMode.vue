@@ -23,11 +23,11 @@
               :disabled="formIsEmpty"
               :class="clearButtonArmed ? 'danger' : ''" 
               @click="handleClearClicked"
-              @blur="this.clearButtonArmed = false">
+              @blur="clearButtonArmed = false">
               {{clearButtonArmed ? "Clear form" : "Clear form" }}
             </button>
 
-            <button class="button success">Generate PDF</button>
+            <button class="button success" @click="generatePDF">Generate PDF</button>
           </div>
         </form>
       </section>
@@ -69,13 +69,13 @@ import Vue from "vue";
 import Field from "@/views/desktop/Field.vue";
 import getRandomInt from "@/utils/getRandomInt.js";
 import fields from "@/utils/fields.js";
-
-
+import GenerateFormPDF from "@/utils/GenerateFormPDF.js";
 
 import {nextNumberWithWrapping, previousNumberWithWrapping} from "@/utils/nextNumberWithWrapping.js";
 
 const MIN_CHANNEL_ID = 111111;
 const MAX_CHANNEL_ID = 999999;
+const FLASH_FIELD_DURATION_MS= 1000;
 
 function objectIsEmpty(obj) {
   // https://stackoverflow.com/a/32108184/6068782
@@ -87,11 +87,15 @@ export default {
   data() {
     return {
       channel_id: undefined,
-      scratchMessages: [],
       phoneConnected: false,
       selectedFieldId: 0,
       fields,
-      model: {},
+      model: [
+        "123456",
+        "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?",
+        "It is critically important to understand the imperitive significance that has thusly been discussed",
+        "It is critically important to understand the imperitive significance that has thusly been discussed",
+      ],
       flashFieldIds: [],
       clearButtonArmed: false
     };
@@ -126,14 +130,8 @@ export default {
 
        this.$store.dispatch("pusher/bind", {
         channel_id: this.fullChannelId,
-        eventName: "client-next-field",
-        callback: this.handleNextField
-      });
-
-       this.$store.dispatch("pusher/bind", {
-        channel_id: this.fullChannelId,
-        eventName: "client-previous-field",
-        callback: this.handlePreviousField
+        eventName: "client-select-field",
+        callback: this.handleSelectField
       });
   },
   methods: {
@@ -145,17 +143,10 @@ export default {
     },
     handleMessage(event) {      
       Vue.set(this.model, event.fieldId, event.text);
-      this.flashFieldIds = this.flashFieldIds.filter(id => id != event.fieldId);
-      this.flashFieldIds.push(event.fieldId);
-      setTimeout(()=>{
-        this.flashFieldIds = this.flashFieldIds.filter(id => id != event.fieldId);
-      }, 1000)
+      this.flashField(event.fieldId);
     },
-    handleNextField() {
-      this.selectedFieldId = nextNumberWithWrapping(this.selectedFieldId, this.fields.length - 1)
-    },
-    handlePreviousField() {
-      this.selectedFieldId = previousNumberWithWrapping(this.selectedFieldId, this.fields.length - 1)
+    handleSelectField(event) {      
+      this.selectedFieldId = event.fieldId;
     },
     changeFocus(fieldId) {
       this.selectedFieldId = fieldId;
@@ -177,6 +168,12 @@ export default {
         }
        });
     },
+    flashField(fieldId) {
+      this.flashFieldIds.push(fieldId);
+      setTimeout(()=>{
+        this.flashFieldIds = this.flashFieldIds.filter(id => id != fieldId);
+      }, FLASH_FIELD_DURATION_MS)
+    },
     handleClearClicked() {
       if(this.formIsEmpty) return;
       this.clearButtonArmed ? this.clearForm() : this.clearButtonArmed = true;
@@ -184,6 +181,15 @@ export default {
     clearForm() {
       this.model = {};
       this.clearButtonArmed = false;
+    },
+    generatePDF() {
+      const fields = this.fields.map((field, index) => {
+        return {
+          ...field,
+          value: this.model[index]
+        }
+      })
+      GenerateFormPDF(fields);
     }
   },
   computed: {

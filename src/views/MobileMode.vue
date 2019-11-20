@@ -162,20 +162,19 @@ export default {
     },
 
     previous() {
-      this.selectedFieldId = previousNumberWithWrapping(this.selectedFieldId, this.fields.length - 1)
-      this.$store.dispatch("pusher/trigger", {
-        channel_id: this.fullChannelId,
-        eventName: "client-previous-field",
-        data: {}
-       });
+      this.selectedFieldId = previousNumberWithWrapping(this.selectedFieldId, this.fields.length - 1);
+      this.syncSelectedField();
     },
     next() {
-      this.selectedFieldId = nextNumberWithWrapping(this.selectedFieldId, this.fields.length - 1)
-      this.$store.dispatch("pusher/trigger", {
+      this.selectedFieldId = nextNumberWithWrapping(this.selectedFieldId, this.fields.length - 1);
+      this.syncSelectedField();
+    },
+    syncSelectedField() {
+       this.$store.dispatch("pusher/trigger", {
         channel_id: this.fullChannelId,
-        eventName: "client-next-field",
-        data: {}
-      });
+        eventName: "client-select-field",
+        data: {fieldId: this.selectedFieldId }
+       });
     }
   },
   computed: {

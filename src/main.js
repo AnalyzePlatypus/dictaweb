@@ -4,7 +4,8 @@ import router from './router'
 import store from './store'
 
 import installSentry from "@/installers/installSentry.js";
-
+import installCryptoQR from "@/installers/installCryptoQR.js";
+import installJsPDF from "@/installers/installJsPDF.js";
 Vue.config.productionTip = false
 
 new Vue({
@@ -14,3 +15,5 @@ new Vue({
 }).$mount('#app');
 
 if(process.env.NODE_ENV === "production") installSentry();
+installCryptoQR();
+installJsPDF();

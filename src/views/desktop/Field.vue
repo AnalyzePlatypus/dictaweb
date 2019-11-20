@@ -1,7 +1,5 @@
 <template>
-    <div 
-    class="form-group"  
-    :class="[selectedFieldId === fieldId ? 'selected-fieldConfig' : '', flashFieldIds.includes(fieldId) ? 'flash-success' : '']">
+  <div class="form-group"  :class="dynamicClasses">
     <label :for="'fieldConfig' + fieldId">{{fieldConfig.label}}</label>
 
     <input
@@ -57,6 +55,12 @@ export default {
       set(value) {
         this.$emit("input", value);
       }
+    },
+    dynamicClasses() {
+      return [
+        this.selectedFieldId === this.fieldId ? 'selected-field' : '', 
+        this.flashFieldIds.includes(this.fieldId) ? 'flash-success' : ''
+      ]
     }
   }
 };

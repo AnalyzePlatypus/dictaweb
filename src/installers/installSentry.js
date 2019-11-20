@@ -1,4 +1,3 @@
-import Vue from 'vue';
 
 async function installSentry() {
   const Sentry = await import(/* webpackChunkName: 'sentry' */'@sentry/browser');
