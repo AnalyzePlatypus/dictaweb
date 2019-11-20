@@ -4,39 +4,19 @@
     <main class="main-container">
       <section>
         <form class="form" @submit.prevent>
-          <div>
-            <div class="form-header">
-              <h1 class="form-title">Case Form</h1>
-            </div>
-
-            <div 
-              v-for="(field, idx) of fields"
-              :key="idx"
-              class="form-group"  
-              :class="[selectedFieldId === idx ? 'selected-field' : '', flashFieldIds.includes(idx) ? 'flash-success' : '']">
-              <label :for="'field' + idx">{{field.label}}</label>
-
-              <input
-                v-if="field.rows === 1"
-                :id="'field' + idx" 
-                :type="field.type" 
-                v-model="model[idx]"
-                @focus="changeFocus(idx)"
-                @change="fieldTextEdited(idx)">
-
-              <textarea
-                v-else
-                :id="'field' + idx" 
-                :type="field.type"
-                :rows="field.rows" 
-                v-model="model[idx]"
-                @focus="changeFocus(idx)"
-                @change="fieldTextEdited(idx)">
-              </textarea>
-            </div>
+          
+          <div class="form-header">
+            <h1 class="form-title">Case Form</h1>
           </div>
 
-          
+          <field 
+            v-for="(fieldConfig, idx) of fields" :key="idx"
+            :fieldId="idx"
+            :fieldConfig="fieldConfig" 
+            :selectedFieldId="selectedFieldId" 
+            :flashFieldIds="flashFieldIds" 
+            v-model="model[idx]" />
+            
           <div class="button-bar flex-horiz justify-between">
             <button 
               class="button" 
@@ -55,14 +35,13 @@
       <aside class="status-card" :class="phoneConnected ? 'connected' : ''">
         <h2>Dictation</h2>
         
-        <section v-if="!connectionState === 'connected'">
+        <section v-if="connectionState !== 'connected'">
           <h2>Connecting...</h2>
         </section>
 
-
         <section v-else-if="connectionState === 'connected' && !phoneConnected">
           <p>Visit <code>dictaweb.netlify.com</code> on your phone and enter code:</p>
-          <p class="connection-code">{{channel_id.toString().substring(0,3)}} {{channel_id.toString().substring(3,6)}}</p>
+          <p class="connection-code">{{channel_id && channel_id.toString().substring(0,3)}} {{channel_id && channel_id.toString().substring(3,6)}}</p>
         </section>
 
         <section v-else-if="phoneConnected">
@@ -87,8 +66,12 @@
 <script>
 
 import Vue from "vue";
+import Field from "@/views/desktop/Field.vue";
 import getRandomInt from "@/utils/getRandomInt.js";
 import fields from "@/utils/fields.js";
+
+
+
 import {nextNumberWithWrapping, previousNumberWithWrapping} from "@/utils/nextNumberWithWrapping.js";
 
 const MIN_CHANNEL_ID = 111111;
@@ -224,6 +207,9 @@ export default {
         }
        });
     }
+  },
+  components: {
+    'field': Field
   }
 };
 </script>
