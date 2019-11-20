@@ -181,7 +181,7 @@ export default {
       const fields = this.fields.map((field, index) => {
         return {
           ...field,
-          value: this.model[index]
+          value: this.model[index] || ""
         }
       })
       GenerateFormPDF(fields);

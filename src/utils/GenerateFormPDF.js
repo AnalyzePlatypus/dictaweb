@@ -16,7 +16,14 @@ function convertPointsToUnit(points, unit) {
   return points * multiplier;
 }
 
-
+const timestampDisplayOptions = {
+  year: "numeric",
+  month: "short", 
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+  timeZoneName: "long"
+}
 
 async function generateFormPDF(fields) {
   const jsPDF = await import(/* webpackChunkName: 'jspdf' */'jspdf');
@@ -34,7 +41,7 @@ async function generateFormPDF(fields) {
   doc.text("Case study", xMargin, cursorY);
   doc.setFontSize(12);
   cursorY += 16;
-  doc.text("Generated at " + new Date(), xMargin, cursorY);
+  doc.text("Generated on " + new Date().toLocaleDateString('en-US', timestampDisplayOptions), xMargin, cursorY);
 
   cursorY += 32;
 
@@ -72,7 +79,18 @@ async function generateFormPDF(fields) {
     cursorY += fieldGroupMarginBottom;
   })
 
-  doc.save('study.pdf');
+  const filenameDateTimeOptions = {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    // timeStyle: 'short',
+  }
+
+  const dateTimeString = new Date().toLocaleDateString('en-US',filenameDateTimeOptions);
+
+  doc.save('study-' + dateTimeString +'.pdf');
 }
 
 function addWrappedText({text, textWidth, doc, fontSize = 10, fontType = 'normal', lineSpacing = 7, xPosition = 10, initialYPosition = 10, pageWrapInitialYPosition = 10}) {
