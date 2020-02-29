@@ -1,0 +1,23 @@
+@font-face {
+  font-family: 'DIN';
+  src: url('/fonts/DIN-MediumAlternate.woff2') format('woff2'),
+      url('/fonts/DIN-MediumAlternate.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'DIN';
+  src: url('/fonts/DIN-RegularAlternate.woff2') format('woff2'),
+      url('/fonts/DIN-RegularAlternate.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'DIN';
+  src: url('/fonts/DIN-BoldAlternate.woff2') format('woff2'),
+      url('/fonts/DIN-BoldAlternate.woff') format('woff');
+  font-weight: bold;
+  font-style: normal;
+}

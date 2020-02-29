@@ -197,21 +197,6 @@ export default {
 $flash-success-timing: cubic-bezier(0.075, 0.82, 0.165, 1);
 
 
-.button-wide {
-  // padding: 4px 22px;
-  width: 100%;
-  &:first-of-type {
-    margin-right: 8px;
-  }
-  &:last-of-type {
-    margin-left: 8px;
-  }
-}
-
-.button-primary {
-  background: rgb(75, 75, 250);
-  color: white;
-}
 
 .sent-banner {
   color: green;
