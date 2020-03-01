@@ -1,24 +1,15 @@
 <template>
-  <div class="full-height"> 
-    <div class="nav-bar">
-      <div class="flex-horiz justify-between align-center">
-        <a href="/" class="logo">dictaweb_</a>
-        <div>
-          <a href="/">about</a>
-          <a href="/">feedback</a>
-        </div>
-
-      </div>
-      
-    </div>
-    <div class="angled-mask"> a</div>
-
+  <div> 
     <main class="main-container">
       <section>
         <form class="form" @submit.prevent>
           
-          <div class="form-header">
+          <div class="form-header flex-horiz justify-between align-center">
             <h1 class="form-title">Case Form</h1>
+            <div v-if="phoneConnected">
+              <span class="connection-status__ok"></span>
+              Connected
+            </div>
           </div>
 
           <field 
@@ -44,7 +35,7 @@
         </form>
       </section>
 
-      <aside class="status-card" :class="phoneConnected ? 'connected' : ''">
+      <aside class="status-card" v-if="!phoneConnected" :class="phoneConnected ? 'connected' : ''">
         <h2>Dictation</h2>
         
         <section v-if="connectionState !== 'connected'">
@@ -57,9 +48,9 @@
           <p class="connection-code">{{channel_id && channel_id.toString().substring(0,3)}} {{channel_id && channel_id.toString().substring(3,6)}}</p>
         </section>
 
-        <section v-else-if="phoneConnected">
+        <!-- <section v-else-if="phoneConnected">
           ✅ Phone connected
-        </section>
+        </section> -->
         <!-- <section>
           <div v-if="connectionState === 'connected'">✅ Server</div>
           <div v-else>❌ Server</div>
@@ -400,7 +391,7 @@ h1,h2,h3,h4,h5,h6,p {
   transition: all 1s $flash-success-timing;
 
   &.connected {
-    margin: 46% 0px 0% 100px;
+    margin-bottom: 0px;
   }
 }
 
@@ -536,11 +527,18 @@ textarea  {
   transform: rotate(-3deg) scaleX(120) translateY(-80px);
 }
 
+.connection-status__ok {
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+  border-radius: 8px;
+  background: $color-success;
+  min-height: 4px;
+}
+
 .nav-bar {
-  @media screen and(min-width: 800px){
-    height: 30%;
+   height: 30%;
     padding: $spacer / 2;
-  }
 
   a {
      font-size: 1.25rem;
@@ -548,7 +546,7 @@ textarea  {
      text-decoration: none;
      padding: $spacer / 4;
   }
-
+  
 
    .logo {
      font-size: 1.5rem;

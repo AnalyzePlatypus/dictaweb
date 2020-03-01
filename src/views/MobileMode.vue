@@ -1,8 +1,5 @@
 <template>
-  <div class="flex-vert align-center">
-     <h1 class="text-center"  style="padding: 32px 0px 24px 0px; ">Dictaphone</h1>
-
-
+  <div class="mobile-container flex-vert align-center">
     <section class="card" style="max-width: 300px;" v-if="connectionState == 'not_initialized'">
       <form @submit="connect">
         <h2>Enter Connection Code</h2>
@@ -24,7 +21,7 @@
 
     <section v-else-if="connectionState == 'connected'" class="mobile-mode-container card">
       
-      <h2 style="text-align:left;">{{fields[selectedFieldId].label}}</h2>
+      <h2 style="text-align:center;">{{fields[selectedFieldId].label}}</h2>
 
       <section>
         <h4 v-if="showSentBanner" class="sent-banner"><bold>Sent!</bold></h4>
@@ -32,11 +29,13 @@
         <textarea class="mobile-textarea" rows="6" placeholder="Start typing..." v-model="model[selectedFieldId]" @change="send" ></textarea>
       </section>
 
-      <section class="flex-horiz">
-        <button @click="previous" class="button-wide button">‹ Previous</button>
-        <button @click="next" class="button-wide button">Next ›</button>
-      </section>
+      <section class="flex-horiz" style="margin-top:8px;">
+      <button @click="previous" class="button-wide button primary">‹ Previous</button>
+      <button @click="next" class="button-wide button primary">Next ›</button>
     </section>
+    </section>
+
+    
 
     
    
@@ -196,7 +195,10 @@ export default {
 
 $flash-success-timing: cubic-bezier(0.075, 0.82, 0.165, 1);
 
-
+.mobile-container {
+  position: relative;
+  z-index: 4;
+}
 
 .sent-banner {
   color: green;
@@ -228,4 +230,17 @@ $flash-success-timing: cubic-bezier(0.075, 0.82, 0.165, 1);
 .text-center {
   text-align: center;
 }
+
+.button-wide {
+  // padding: 4px 22px;
+  width: 100%;
+  &:first-of-type {
+    margin-right: 8px;
+  }
+  &:last-of-type {
+    margin-left: 8px;
+  }
+}
+
+
 </style>

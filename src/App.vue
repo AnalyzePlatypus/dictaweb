@@ -1,7 +1,16 @@
 <template>
   <div id="app">
-    <div id="nav">
+      <div class="nav-bar">
+      <div class="flex-horiz justify-between align-center">
+        <a href="/" class="logo">dictaweb_</a>
+        <!-- <div>
+          <a href="/">about</a>
+          <a href="/">feedback</a>
+        </div> -->
+      </div>
+      
     </div>
+    <div class="angled-mask"></div>
     <router-view/>
   </div>
 </template>
@@ -31,6 +40,7 @@ html, body {
   color: #2c3e50;
   height: 100%;
   width: 100%;
+  overflow-y: hidden;
 }
 
 .flex-horiz {
