@@ -11,7 +11,7 @@
     "@sentry/browser": "^5.9.1",
     "@sentry/integrations": "^5.8.0",
     "core-js": "^3.3.2",
-    "jspdf": "^1.5.3",
+    "jspdf": "^2.3.1",
     "jsqr": "^1.2.0",
     "libsodium-wrappers": "^0.7.6",
     "pusher-js": "^5.0.2",
